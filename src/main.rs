@@ -26,7 +26,7 @@ fn partition(vec: &mut Vec<i32>, rng: &mut ThreadRng, low: usize, high: usize) -
         vec[left] = vec[right];
         vec[right] = temp;
         left += 1;
-        left += 1;
+        right -= 1;
     }
 }
 
