@@ -1,4 +1,5 @@
 use std::io::{stdin, Write};
+use std::path::Path;
 use std::{fs, fs::File};
 use std::time;
 use std::error::Error;
@@ -42,7 +43,7 @@ fn quick_sort(vec: &mut Vec<i32>, rng: &mut ThreadRng, low: usize, high: usize) 
     }
 }
 
-fn gen_file(path: String, rng: &mut ThreadRng, amount: usize) -> std::io::Result<()> {
+fn gen_file(path: &Path, rng: &mut ThreadRng, amount: usize) -> std::io::Result<()> {
     let mut file = File::create(path)?;
 
     let mut buffer = String::new();
@@ -59,20 +60,20 @@ fn gen_file(path: String, rng: &mut ThreadRng, amount: usize) -> std::io::Result
 fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = rand::rng();
     let amount = 100usize;
-    let input_path = "data/input.txt".to_string();
+    let input_path = Path::new("data/input.txt");
 
     println!("Нужно ли генерировать новый вход (Y - Yes, n - no): ");
     let mut answer = String::new();
     stdin().read_line(&mut answer)?;
     match answer.as_str().trim() {
        "Y" => {
-            gen_file(input_path.clone(), &mut rng, amount)?;
+            gen_file(input_path, &mut rng, amount)?;
         }
         "n" => { }
         _ => { }
     }
 
-    let input = fs::read_to_string(input_path.clone())?;
+    let input = fs::read_to_string(input_path)?;
     let mut vec: Vec<i32> = input.split_whitespace()
                                  .map(|s| {s.parse().unwrap()})
                                  .collect();
