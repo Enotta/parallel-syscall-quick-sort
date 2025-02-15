@@ -58,13 +58,13 @@ fn gen_file(path: String, rng: &mut ThreadRng, amount: usize) -> std::io::Result
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = rand::rng();
-    let amount = 10000000usize;
+    let amount = 100usize;
     let input_path = "data/input.txt".to_string();
 
     println!("Нужно ли генерировать новый вход (Y - Yes, n - no): ");
     let mut answer = String::new();
     stdin().read_line(&mut answer)?;
-    match answer.as_str() {
+    match answer.as_str().trim() {
        "Y" => {
             gen_file(input_path.clone(), &mut rng, amount)?;
         }
