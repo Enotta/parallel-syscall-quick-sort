@@ -5,16 +5,18 @@ use std::time;
 use std::error::Error;
 
 use rand::{rngs::ThreadRng, Rng};
+use rayon;
 
-fn pivot(rng: &mut ThreadRng, low: usize, high: usize) -> usize {
+fn pivot(low: usize, high: usize) -> usize {
+    let mut rng = rand::rng();
     rng.random_range(low..=high)
 }
 
-fn partition(vec: &mut Vec<i32>, rng: &mut ThreadRng, low: usize, high: usize) -> usize {
-    let p = vec[pivot(rng, low, high)];
+fn partition(vec: &mut [i32]) -> usize {
+    let mut left = 0usize;
+    let mut right = vec.len()-1;
 
-    let mut left = low;
-    let mut right = high;
+    let p = vec[pivot(left, right)];
 
     loop {
         while vec[left] < p {
@@ -28,16 +30,14 @@ fn partition(vec: &mut Vec<i32>, rng: &mut ThreadRng, low: usize, high: usize) -
         }
 
         vec.swap(left, right);
-        left += 1;
-        right -= 1;
     }
 }
 
-fn quick_sort(vec: &mut Vec<i32>, rng: &mut ThreadRng, low: usize, high: usize) -> () {
-    if low < high {
-        let p = partition(vec, rng, low, high);
-        quick_sort(vec, rng, low, p);
-        quick_sort(vec, rng, p + 1, high);
+fn quick_sort(vec: &mut [i32]) -> () {
+    if vec.len() > 1 {
+        let p = partition(vec);
+        let (low, high) = vec.split_at_mut(p);
+        rayon::join(|| quick_sort(low), || quick_sort(high));
     }
 }
 
@@ -55,19 +55,19 @@ fn gen_file(path: &Path, rng: &mut ThreadRng, amount: usize) -> std::io::Result<
     Ok(())
 }
 
-fn validate(vec: &Vec<i32>) -> bool {
+fn validate(vec: &Vec<i32>) -> Result<(), usize> {
     for index in 1..vec.len() {
         if vec[index] < vec[index - 1] {
-            return false;
+            return Err(index);
         }
     }
 
-    true
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = rand::rng();
-    let amount = 100usize;
+    let amount = 10000usize;
     let input_path = Path::new("data/input.txt");
 
     println!("Нужно ли генерировать новый вход (Y - Yes, n - no): ");
@@ -85,17 +85,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut vec: Vec<i32> = input.split_whitespace()
                                  .map(|s| {s.parse().unwrap()})
                                  .collect();
-    let high = vec.len() - 1;
 
     let mut now = time::Instant::now();
-    quick_sort(&mut vec, &mut rng, 0usize, high);
+    quick_sort(&mut vec);
     let elapsed_custom = now.elapsed();
     match validate(&vec) {
-        true => {
+        Ok(()) => {
             println!("На сортировку {} элементов кастомной сортировкой потрачено {} секунд", amount, elapsed_custom.as_secs_f32());
         }
-        false => {
-            println!("Кастомная сортировка не справилась с задачей!")
+        Err(i) => {
+            println!("Кастомная сортировка не справилась с задачей! Значение под индексом {} ({}), меньше, чем предыдущее {}", i, vec[i], vec[i-1]);
         }
     }
     
