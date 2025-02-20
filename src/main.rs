@@ -7,7 +7,7 @@ use std::error::Error;
 use rand::{rngs::ThreadRng, Rng};
 
 fn pivot(rng: &mut ThreadRng, low: usize, high: usize) -> usize {
-    return rng.random_range(low..=high);
+    rng.random_range(low..=high)
 }
 
 fn partition(vec: &mut Vec<i32>, rng: &mut ThreadRng, low: usize, high: usize) -> usize {
@@ -27,9 +27,7 @@ fn partition(vec: &mut Vec<i32>, rng: &mut ThreadRng, low: usize, high: usize) -
             return right;
         }
 
-        let temp = vec[left];
-        vec[left] = vec[right];
-        vec[right] = temp;
+        vec.swap(left, right);
         left += 1;
         right -= 1;
     }
@@ -57,6 +55,16 @@ fn gen_file(path: &Path, rng: &mut ThreadRng, amount: usize) -> std::io::Result<
     Ok(())
 }
 
+fn validate(vec: &Vec<i32>) -> bool {
+    for index in 1..vec.len() {
+        if vec[index] < vec[index - 1] {
+            return false;
+        }
+    }
+
+    true
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = rand::rng();
     let amount = 100usize;
@@ -82,7 +90,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut now = time::Instant::now();
     quick_sort(&mut vec, &mut rng, 0usize, high);
     let elapsed_custom = now.elapsed();
-    println!("На сортировку {} элементов кастомной сортировкой потрачено {} секунд", amount, elapsed_custom.as_secs_f32());
+    match validate(&vec) {
+        true => {
+            println!("На сортировку {} элементов кастомной сортировкой потрачено {} секунд", amount, elapsed_custom.as_secs_f32());
+        }
+        false => {
+            println!("Кастомная сортировка не справилась с задачей!")
+        }
+    }
+    
 
     vec.clear();
     vec = input.split_whitespace()
